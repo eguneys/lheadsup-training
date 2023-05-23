@@ -1,0 +1,26 @@
+%YAML 1.2
+---
+name: 'hu1'
+
+dataset:
+  num_chunks: 100
+  train_ratio: 0.90
+  input: '/tmp/train-1/'
+
+training:
+  batch_size: 2048
+  test_steps: 2000
+  total_steps: 140000
+  warmup_steps: 250
+  lr_values:
+    - 0.02
+    - 0.002
+    - 0.0005
+  lr_boundaries:
+    - 100000
+    - 130000
+  path: '/tmp/networks/'
+
+model:
+  filters: 64
+  residual_blocks: 6
