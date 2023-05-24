@@ -9,9 +9,9 @@ dataset:
 
 training:
   batch_size: 2048
-  test_steps: 20
-  total_steps: 30
-  warmup_steps: 20
+  test_steps: 200
+  total_steps: 3000
+  warmup_steps: 50
   lr_values:
     - 0.02
     - 0.002

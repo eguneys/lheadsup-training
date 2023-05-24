@@ -53,6 +53,7 @@ class ChunkParserInner:
             s = list(itertools.islice(gen, self.batch_size))
             if not len(s):
                 return
+
             yield (b''.join([x[0] for x in s]), b''.join([x[1] for x in s]),
                     b''.join([x[2] for x in s]))
 
@@ -73,12 +74,14 @@ class ChunkParserInner:
 
     def convert_v6_to_tuple(self, content):
         (prob_ranks, prob_cards, planes) = self.v6_struct.unpack(content)
-
         planes = np.unpackbits(np.frombuffer(planes, dtype=np.uint8)).astype(np.float32)
 
         planes = planes.tobytes() + \
                 self.flat_planes[1]
         assert len(planes) == ((5 * 2 + 1) * 8 * 4)
+
+        prob_ranks = b''.join(struct.pack('f', f) for f in prob_ranks)
+        prob_cards = b''.join(struct.pack('f', f) for f in prob_cards)
 
         return (planes, prob_ranks, prob_cards)
 
