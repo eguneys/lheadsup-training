@@ -17,12 +17,24 @@
 
 - simulate 6 rounds
 
-- one
-
-- two
 
 
+- fold
+- fold | raise
+        - fold | allin
+                - fold | call
+                        - cards
+- fold
+- fold | raise
+        - fold | allin
+                - fold | call
+                        - cards
 
+
+- a round
+- stacks blinds
+- min-raise thirdpot-raise half-pot pot-raise onehalfpot-raise twopot-raise allin
+- check call fold
 
 
 
