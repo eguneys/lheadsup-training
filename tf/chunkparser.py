@@ -4,7 +4,7 @@ import gzip
 import sys
 import numpy as np
 
-V6_STRUCT_STRING = '36s52s40s'
+V6_STRUCT_STRING = '9s13s10s'
 
 class ChunkParser:
     def __init__(self, 
@@ -16,6 +16,8 @@ class ChunkParser:
     def parse(self):
         return self.inner.parse()
 
+    def shutdown(self):
+        pass
 
 class ChunkParserInner:
 
@@ -24,7 +26,7 @@ class ChunkParserInner:
         self.flat_planes = []
         for i in range(2):
             self.flat_planes.append(
-                    (np.zeros(32, dtype=np.float32) + i).tobytes())
+                    (np.zeros(8, dtype=np.float32) + i).tobytes())
 
         self.sample = sample
 
@@ -76,8 +78,7 @@ class ChunkParserInner:
 
         planes = planes.tobytes() + \
                 self.flat_planes[1]
-         
-        assert len(planes) == ((5 * 2 + 1) * 8 * 4 * 4)
+        assert len(planes) == ((5 * 2 + 1) * 8 * 4)
 
         return (planes, prob_ranks, prob_cards)
 
@@ -105,4 +106,5 @@ class ChunkParserInner:
                     continue
             record = chunkdata[i:i+record_size]
             yield record
+
 

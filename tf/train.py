@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
+
 import argparse
 import yaml
 import random
 import glob
 import sys
 import os
+# https://stackoverflow.com/questions/35911252/disable-tensorflow-debugging-information
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
 from chunkparser import ChunkParser
 
 def get_chunks(data_prefix):
@@ -84,6 +88,8 @@ def main(cmd):
     print("Using {} evaluation batches".format(num_evals))
     tfprocess.total_batch_size = total_batch_size
     tfprocess.process_loop(total_batch_size, num_evals)
+
+    print("Done shutdown")
 
     train_parser.shutdown()
     test_parser.shutdown()
