@@ -3,7 +3,7 @@
 name: 'hu1'
 
 dataset:
-  num_chunks: 100
+  num_chunks: 3162
   train_ratio: 0.90
   input: '/tmp/train-1/'
 
