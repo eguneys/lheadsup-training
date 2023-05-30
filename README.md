@@ -10,31 +10,13 @@
 - min-raise thirdpot-raise half-pot pot-raise onehalfpot-raise twopot-raise allin
 - check call fold
 
-- stacks blinds
-
-
-- simulate a round
-
-- simulate 6 rounds
+- blinds button stacks
 
 
 
-- fold
-- fold | raise
-        - fold | allin
-                - fold | call
-                        - cards
-- fold
-- fold | raise
-        - fold | allin
-                - fold | call
-                        - cards
+- one round 500 deals
+- ten rounds 5000 deals
 
-
-- a round
-- stacks blinds
-- min-raise thirdpot-raise half-pot pot-raise onehalfpot-raise twopot-raise allin
-- check call fold
 
 
 
