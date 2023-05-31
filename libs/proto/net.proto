@@ -1,0 +1,41 @@
+syntax = "proto2";
+
+package pblczero;
+
+message Weights {
+  message Layer {
+    optional float min_val = 1;
+    optional float max_val = 2;
+    optional bytes params = 3;
+  }
+
+  message ConvBlock {
+    optional Layer weights = 1;
+    optional Layer biases = 2;
+    optional Layer bn_means = 3;
+    optional Layer bn_stddivs = 4;
+    optional Layer bn_gammas = 5;
+    optional Layer bn_betas = 6;
+  }
+
+  message Residual {
+    optional ConvBlock conv1 = 1;
+    optional ConvBlock conv2 = 2;
+  }
+
+  optional ConvBlock input = 1;
+  repeated Residual residual = 2;
+
+
+  optional ConvBlock value = 6;
+  optional Layer ip1_val_w = 7;
+  optional Layer ip1_val_b = 8;
+  optional Layer ip2_val_w = 9;
+  optional Layer ip2_val_b = 10;
+}
+
+
+message Net {
+  optional fixed32 magic = 1;
+  optional Weights weights = 10;
+}

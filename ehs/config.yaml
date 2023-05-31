@@ -11,7 +11,7 @@ training:
   batch_size: 512
   test_steps: 2000
   train_avg_report_steps: 150
-  total_steps: 140000
+  total_steps: 140
   warmup_steps: 250
   lr_values:
     - 0.02

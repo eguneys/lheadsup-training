@@ -2,3 +2,4 @@ leelalogs/
 __pycache__/
 *.pyc
 *.gz
+*_pb2.py
