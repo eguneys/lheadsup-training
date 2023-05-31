@@ -11,6 +11,7 @@ def nested_getattr(obj, attr):
 
 class Net:
     def __init__(self):
+        self.js = {}
         self.pb = pb.Net()
         self.weights = []
 
