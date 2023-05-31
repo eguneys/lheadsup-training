@@ -2,6 +2,7 @@ import gzip
 import os
 import numpy as np
 import proto.net_pb2 as pb
+from jsnet import JSNet
 
 def nested_getattr(obj, attr):
     attributes = attr.split(".")
@@ -11,7 +12,7 @@ def nested_getattr(obj, attr):
 
 class Net:
     def __init__(self):
-        self.js = {}
+        self.jsnet = JSNet()
         self.pb = pb.Net()
         self.weights = []
 
@@ -30,6 +31,7 @@ class Net:
 
 
     def save_proto(self, filename):
+        self.jsnet.save_proto(filename)
         if len(filename.split('.')) == 1:
                 filename += '.pb.gz'
         with gzip.open(filename, 'wb') as f:
@@ -86,6 +88,7 @@ class Net:
         return (pb_name, block)
 
     def fill_net_v2(self, all_weights):
+        self.jsnet.fill_net_v2(all_weights)
         weight_names = [w[0] for w in all_weights]
 
         for name, weights in all_weights:
