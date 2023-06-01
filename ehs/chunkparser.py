@@ -99,6 +99,7 @@ class ChunkParserInner:
         planes = planes.tobytes() + \
                 self.flat_planes[1]
 
+
         assert len(planes) == ((7 * 2 + 1) * 8 * 4)
 
         return (planes, value)

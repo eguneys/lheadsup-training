@@ -42,6 +42,9 @@ class JSNet:
 
         params *= 0xffff
         params = np.round(params)
+        #print(params.astype(np.uint16)[0:50])
+        #print(len(base64.b64encode(params.astype(np.uint16).tobytes()).decode('utf-8')))
+        #print(base64.b64encode(params.astype(np.uint16).tobytes()).decode('utf-8'))
         layer["params"] = base64.b64encode(params.astype(np.uint16).tobytes()).decode('utf-8')
 
     def save_proto(self, filename):
@@ -128,6 +131,7 @@ class JSNet:
                             })
                 pb_weights = self.js.get("weights").get("residual")[block]
 
+            if pb_name == 'input.weights': print(weights.shape)
             self.fill_layer_v2(nested_getattr(pb_weights, pb_name), weights)
 
             if pb_name.endswith('bn_betas'):
