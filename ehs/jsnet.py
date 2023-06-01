@@ -131,7 +131,7 @@ class JSNet:
                             })
                 pb_weights = self.js.get("weights").get("residual")[block]
 
-            if pb_name == 'input.weights': print(weights.shape)
+            #if pb_name == 'input.weights': print(weights.shape)
             self.fill_layer_v2(nested_getattr(pb_weights, pb_name), weights)
 
             if pb_name.endswith('bn_betas'):

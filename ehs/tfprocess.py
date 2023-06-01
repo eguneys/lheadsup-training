@@ -3,7 +3,7 @@ import os
 import time
 import bisect
 
-from net import Net
+from jsnet import JSNet
 
 class Metric:
 
@@ -38,7 +38,7 @@ class TFProcess:
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.net = Net()
+        self.net = JSNet()
         self.root_dir = os.path.join(self.cfg['training']['path'],
                 self.cfg['name'])
 
