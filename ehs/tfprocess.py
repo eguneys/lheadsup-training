@@ -96,13 +96,17 @@ class TFProcess:
            output = tf.cast(output, tf.float32)
            return tf.reduce_mean(tf.square(target - output))
 
-       self.value_loss_fn = value_loss
+       def mean_absolute_error(target, output):
+           return tf.reduce_mean(tf.abs(target - output))
+
+       #self.value_loss_fn = value_loss
+       self.value_loss_fn = mean_absolute_error
 
        def value_accuracy(target, output):
            output = tf.cast(output, tf.float32)
            mse = tf.reduce_mean(tf.square(target - output))
-
-           return 1.0 / mse
+           mae = tf.reduce_mean(tf.abs(target - output))
+           return 1.0 / mae
 
        self.value_accuracy_fn = value_accuracy
 
