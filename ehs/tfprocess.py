@@ -100,18 +100,6 @@ class TFProcess:
        def mean_absolute_error(target, output):
            return tf.reduce_mean(tf.abs(target - output))
 
-"""
-       def huber_loss(target, output, delta):
-           residual = tf.abs(target - output)
-           condition = tf.less(residual, delta)
-           small_res = 0.5 * tf.square(residual)
-           large_res = delta * residual - 0.5 * tf.square(delta)
-           return tf.reduce_mean(tf.where(condition, small_res, large_res))
-
-       def huber_loss_delta(target, output):
-           return huber_loss(target, output, 0.1)
-"""
-
        def huber_loss(target, output):
            output = tf.cast(output, tf.float32)
            huber = tf.keras.losses.Huber(0.1)
@@ -125,7 +113,7 @@ class TFProcess:
            output = tf.cast(output, tf.float32)
            mse = tf.reduce_mean(tf.square(target - output))
            mae = tf.reduce_mean(tf.abs(target - output))
-           hul = huber_loss_delta(target, output)
+           hul = huber_loss(target, output)
            return 1.0 / hul
 
        self.value_accuracy_fn = value_accuracy
@@ -484,8 +472,10 @@ class TFProcess:
             value_loss = self.value_loss_fn(y, value)
             reg_term = sum(self.model.losses)
             total_loss = self.lossMix(value_loss, value_loss, reg_term)
+            #tf.print(total_loss)
             if self.loss_scale != 1:
                 total_loss = self.optimizer.get_scaled_loss(total_loss)
+            #tf.print(total_loss)
             metrics = [
                     value_loss,
                     reg_term,
