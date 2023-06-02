@@ -99,7 +99,9 @@ class TFProcess:
            output = tf.cast(output, tf.float32)
            target = target * scale
            output = output * scale
-           return tf.reduce_mean(tf.square(target - output))
+
+           #tf.print(target, output, tf.reduce_mean(tf.square(target - output)))
+           return tf.reduce_mean(tf.square(target - output)) / scale
 
        def mean_absolute_error(target, output):
            return tf.reduce_mean(tf.abs(target - output))
