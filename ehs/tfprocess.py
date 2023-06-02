@@ -70,7 +70,8 @@ class TFProcess:
         self.init_net()
 
     def init_net(self):
-       self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
+       #self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
+       self.l2reg = None
        input_var = tf.keras.Input(shape=(8, 1, 15))
        outputs = self.construct_net(input_var)
 
@@ -99,8 +100,19 @@ class TFProcess:
        def mean_absolute_error(target, output):
            return tf.reduce_mean(tf.abs(target - output))
 
+       def huber_loss(target, output, delta):
+           residual = tf.abs(target - output)
+           condition = tf.less(residual, delta)
+           small_res = 0.5 * tf.square(residual)
+           large_res = delta * residual - 0.5 * tf.square(delta)
+           return tf.reduce_mean(tf.where(condition, small_res, large_res))
+
+       def huber_loss_delta(target, output):
+           return huber_loss(target, output, 0.1)
+
        #self.value_loss_fn = value_loss
-       self.value_loss_fn = mean_absolute_error
+       #self.value_loss_fn = mean_absolute_error
+       self.value_loss_fn = huber_loss_delta
 
        def value_accuracy(target, output):
            output = tf.cast(output, tf.float32)
