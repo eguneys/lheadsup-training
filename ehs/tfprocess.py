@@ -100,6 +100,7 @@ class TFProcess:
        def mean_absolute_error(target, output):
            return tf.reduce_mean(tf.abs(target - output))
 
+"""
        def huber_loss(target, output, delta):
            residual = tf.abs(target - output)
            condition = tf.less(residual, delta)
@@ -109,10 +110,16 @@ class TFProcess:
 
        def huber_loss_delta(target, output):
            return huber_loss(target, output, 0.1)
+"""
+
+       def huber_loss(target, output):
+           output = tf.cast(output, tf.float32)
+           huber = tf.keras.losses.Huber(0.1)
+           return tf.reduce_mean(huber(target, output))
 
        #self.value_loss_fn = value_loss
        #self.value_loss_fn = mean_absolute_error
-       self.value_loss_fn = huber_loss_delta
+       self.value_loss_fn = huber_loss
 
        def value_accuracy(target, output):
            output = tf.cast(output, tf.float32)
