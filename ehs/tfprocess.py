@@ -44,6 +44,7 @@ class TFProcess:
 
 
         loss_scale = self.cfg['training'].get('loss_scale', 128)
+        loss_scale = 1
 
         self.loss_scale = loss_scale
 
@@ -94,7 +95,10 @@ class TFProcess:
            self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, False, self.loss_scale)
 
        def value_loss(target, output):
+           scale = 10.0
            output = tf.cast(output, tf.float32)
+           target = target * scale
+           output = output * scale
            return tf.reduce_mean(tf.square(target - output))
 
        def mean_absolute_error(target, output):
