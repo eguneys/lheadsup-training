@@ -118,7 +118,8 @@ class TFProcess:
            output = tf.cast(output, tf.float32)
            mse = tf.reduce_mean(tf.square(target - output))
            mae = tf.reduce_mean(tf.abs(target - output))
-           return 1.0 / mae
+           hul = huber_loss_delta(target, output)
+           return 1.0 / hul
 
        self.value_accuracy_fn = value_accuracy
 
