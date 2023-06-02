@@ -109,14 +109,15 @@ class TFProcess:
        #self.value_loss_fn = mean_absolute_error
        self.value_loss_fn = huber_loss
 
-       def value_accuracy(target, output):
+       def accuracy(target, output, threshold=0.01):
            output = tf.cast(output, tf.float32)
-           mse = tf.reduce_mean(tf.square(target - output))
-           mae = tf.reduce_mean(tf.abs(target - output))
-           hul = huber_loss(target, output)
-           return 1.0 / hul
+           target = tf.cast(target, tf.float32)
+           absolute_difference = tf.abs(target - output)
+           correct_predictions = tf.less_equal(absolute_difference, threshold)
+           accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+           return accuracy
 
-       self.value_accuracy_fn = value_accuracy
+       self.value_accuracy_fn = accuracy
 
 
        def value_entropy(target, output):
@@ -379,9 +380,10 @@ class TFProcess:
         value_loss = self.value_loss_fn(y, value)
         value_accuracy = self.value_accuracy_fn(y, value)
 
+        #tf.print(value_loss, value_accuracy)
         metrics = [
                 value_loss,
-                value_accuracy]
+                value_accuracy * 100]
 
         return metrics
 
@@ -472,10 +474,8 @@ class TFProcess:
             value_loss = self.value_loss_fn(y, value)
             reg_term = sum(self.model.losses)
             total_loss = self.lossMix(value_loss, value_loss, reg_term)
-            #tf.print(total_loss)
             if self.loss_scale != 1:
                 total_loss = self.optimizer.get_scaled_loss(total_loss)
-            #tf.print(total_loss)
             metrics = [
                     value_loss,
                     reg_term,
