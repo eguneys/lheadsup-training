@@ -144,10 +144,10 @@ class JSNet:
                             "conv1": { "weights": {} },
                             "conv2": { "weights": {} },
                             "se": { 
-                                "w1": { "weights": {} },
-                                "b1": { "weights": {} },
-                                "w2": { "weights": {} },
-                                "b2": { "weights": {} }
+                                "w1": {},
+                                "b1": {},
+                                "w2": {},
+                                "b2": {}
                                 }
                             })
                 pb_weights = self.js.get("weights").get("residual")[block]
