@@ -1,11 +1,11 @@
 %YAML 1.2
 ---
-name: 'ehs1_l'
+name: 'ehs1_river_3x32'
 
 dataset:
   num_chunks: 100
   train_ratio: 0.90
-  input: '/tmp/ehs-data2/'
+  input: '/tmp/ehs-data/river/'
 
 training:
   batch_size: 512
@@ -14,18 +14,16 @@ training:
   total_steps: 14000
   warmup_steps: 250
   lr_values:
-    - 0.1
     - 0.02
     - 0.002
     - 0.0005
   lr_boundaries:
-    - 8000
     - 10000
-    - 13000
+    - 12000
   value_loss_weight: 1.0
   path: '/tmp/networks/'
 
 model:
-  filters: 64
-  residual_blocks: 6
+  filters: 32
+  residual_blocks: 3
   se_ratio: 2
