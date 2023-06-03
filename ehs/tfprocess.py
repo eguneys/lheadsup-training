@@ -34,6 +34,22 @@ class Metric:
         self.value = 0.0
         self.count = 0
 
+class ApplySqueezeExcitation(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(ApplySqueezeExcitation, self).__init__(**kwargs)
+
+    def build(self, input_dimens):
+        self.reshape_size = input_dimens[1][1]
+
+    def call(self, inputs):
+        x = inputs[0]
+        excited = inputs[1]
+        gammas, betas = tf.split(tf.reshape(excited,
+            [-1, 1, 1, self.reshape_size]),
+            2,
+            axis = 3)
+        return tf.nn.sigmoid(gammas) * x + betas
+
 class TFProcess:
 
     def __init__(self, cfg):
@@ -50,6 +66,7 @@ class TFProcess:
 
         self.RESIDUAL_FILTERS = self.cfg['model'].get('filters', 0)
         self.RESIDUAL_BLOCKS = self.cfg['model'].get('residual_blocks', 0)
+        self.SE_ratio = self.cfg['model'].get('se_ratio', 0)
 
         self.value_channels = self.cfg['model'].get('value_channels', 32)
 
@@ -95,7 +112,7 @@ class TFProcess:
            self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, False, self.loss_scale)
 
        def value_loss(target, output):
-           scale = 10.0
+           scale = 5.0
            output = tf.cast(output, tf.float32)
            target = target * scale
            output = output * scale
@@ -115,7 +132,7 @@ class TFProcess:
        #self.value_loss_fn = mean_absolute_error
        #self.value_loss_fn = huber_loss
 
-       def accuracy(target, output, threshold=0.01):
+       def accuracy(target, output, threshold=0.07):
            output = tf.cast(output, tf.float32)
            target = tf.cast(target, tf.float32)
            absolute_difference = tf.abs(target - output)
@@ -185,6 +202,24 @@ class TFProcess:
             print("Restoring from {0}".format(self.manager.latest_checkpoint))
             self.checkpoint.restore(self.manager.latest_checkpoint)
 
+    def squeeze_excitation(self, inputs, channels, name):
+        assert channels % self.SE_ratio == 0
+
+        pooled = tf.keras.layers.GlobalAveragePooling2D(
+                data_format='channels_last')(inputs)
+        squeezed = tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(
+                tf.keras.layers.Dense(channels // self.SE_ratio,
+                    kernel_initializer='glorot_normal',
+                    kernel_regularizer=self.l2reg,
+                    name=name + '/se/dense1')(pooled))
+
+        excited = tf.keras.layers.Dense(2 * channels,
+                kernel_initializer='glorot_normal',
+                kernel_regularizer=self.l2reg,
+                name=name + '/se/dense2')(squeezed)
+
+        return ApplySqueezeExcitation()([inputs, excited])
+
     def conv_block(self,
             inputs,
             filter_size,
@@ -219,7 +254,7 @@ class TFProcess:
                 data_format='channels_last',
                 name=name + '/2/conv2d')(out1)
 
-        out2 = conv2
+        out2 = self.squeeze_excitation(conv2, channels, name=name + '/se')
 
         return tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(
                 tf.keras.layers.add([inputs, out2]))
@@ -376,8 +411,8 @@ class TFProcess:
         numpy_weights = []
         for weight in self.model.weights:
             numpy_weights.append([weight.name, weight.numpy()])
-        self.net.fill_net_v2(numpy_weights)
-        self.net.save_proto(filename)
+        #self.net.fill_net_v2(numpy_weights)
+        #self.net.save_proto(filename)
 
     @tf.function()
     def calculate_test_summaries_inner_loop(self, x, y):
