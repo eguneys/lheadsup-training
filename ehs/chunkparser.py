@@ -96,10 +96,12 @@ class ChunkParserInner:
 
         planes = np.unpackbits(np.frombuffer(cards, dtype=np.uint8)).astype(np.float32)
 
-        planes = planes.tobytes() + \
+        planes = planes[0:4*8].tobytes() + \
+                self.flat_planes[1] + \
+                planes[4*8:].tobytes() + \
                 self.flat_planes[1]
 
-        assert len(planes) == ((7 * 2 + 1) * 8 * 4)
+        assert len(planes) == ((7 * 2 + 1 + 1) * 8 * 4)
 
         return (planes, value)
 

@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-name: 'ehs1_river_3x32'
+name: 'ehs1_river_3x32_v2'
 
 dataset:
   num_chunks: 100

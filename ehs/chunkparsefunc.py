@@ -5,7 +5,7 @@ def parse_function(cards, value):
     value = tf.io.decode_raw(value, tf.float32)
 
 
-    cards = tf.reshape(cards, (-1, 15, 8, 1))
+    cards = tf.reshape(cards, (-1, 16, 8, 1))
     value = tf.reshape(value, (-1, 1))
 
     # channels_last
