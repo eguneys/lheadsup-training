@@ -411,8 +411,8 @@ class TFProcess:
         numpy_weights = []
         for weight in self.model.weights:
             numpy_weights.append([weight.name, weight.numpy()])
-        #self.net.fill_net_v2(numpy_weights)
-        #self.net.save_proto(filename)
+        self.net.fill_net_v2(numpy_weights)
+        self.net.save_proto(filename)
 
     @tf.function()
     def calculate_test_summaries_inner_loop(self, x, y):

@@ -71,6 +71,19 @@ class JSNet:
             }
             return d[w]
 
+        def se_to_bp(l, w):
+            if l == 'dense1':
+                n = 1
+            elif l == 'dense2':
+                n = 2
+            else:
+                raise ValueError('Unable to decode SE-weight {}/{}'.format(
+                    l, w))
+            w = w.split(':')[0]
+            d = {'kernel': 'w', 'bias': 'b'}
+
+            return d[w] + str(n)
+
         def value_to_bp(l, w):
             if l == 'dense1':
                 n = 1
@@ -103,6 +116,8 @@ class JSNet:
                  pb_name = 'conv1.' + convblock_to_bp(weights_name)
             elif layers[1] == '2':
                  pb_name = 'conv2.' + convblock_to_bp(weights_name)
+            elif layers[1] == 'se':
+                pb_name = 'se.' + se_to_bp(layers[-2], weights_name)
         return (pb_name, block)
 
 
@@ -127,7 +142,13 @@ class JSNet:
                 while block >= len(self.js.get("weights").get("residual")):
                         self.js.get("weights").get("residual").append({
                             "conv1": { "weights": {} },
-                            "conv2": { "weights": {} }
+                            "conv2": { "weights": {} },
+                            "se": { 
+                                "w1": { "weights": {} },
+                                "b1": { "weights": {} },
+                                "w2": { "weights": {} },
+                                "b2": { "weights": {} }
+                                }
                             })
                 pb_weights = self.js.get("weights").get("residual")[block]
 

@@ -22,6 +22,5 @@ if not os.path.exists(root_dir):
     os.makedirs(root_dir)
 path = os.path.join(tfp.root_dir, tfp.cfg['name'])
 steps = tfp.global_step.read_value().numpy()
-print("HELLO {}".format(steps))
 leela_path = path + '-' + str(steps)
 tfp.save_leelaz_weights(leela_path)
