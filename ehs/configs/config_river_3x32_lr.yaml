@@ -1,3 +1,4 @@
+
 %YAML 1.2
 ---
 name: 'ehs1_river_3x32_v2'
@@ -14,9 +15,9 @@ training:
   total_steps: 28000
   warmup_steps: 250
   lr_values:
+    - 0.003
     - 0.001
     - 0.0003
-    - 0.00002
   lr_boundaries:
     - 19000
     - 25000

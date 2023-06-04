@@ -112,7 +112,7 @@ class TFProcess:
            self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, False, self.loss_scale)
 
        def value_loss(target, output):
-           scale = 5.0
+           scale = 100.0
            output = tf.cast(output, tf.float32)
            target = target * scale
            output = output * scale
@@ -421,7 +421,6 @@ class TFProcess:
         value_loss = self.value_loss_fn(y, value)
         value_accuracy = self.value_accuracy_fn(y, value)
 
-        #tf.print(value_loss, value_accuracy)
         metrics = [
                 value_loss,
                 value_accuracy * 100]
@@ -517,6 +516,7 @@ class TFProcess:
             total_loss = self.lossMix(value_loss, value_loss, reg_term)
             if self.loss_scale != 1:
                 total_loss = self.optimizer.get_scaled_loss(total_loss)
+            #tf.print(value)
             metrics = [
                     value_loss,
                     reg_term,
