@@ -89,7 +89,8 @@ class TFProcess:
 
     def init_net(self):
        #self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
-       self.l2reg = None
+       self.l2reg = tf.keras.regularizers.l2()
+       #self.l2reg = None
        input_var = tf.keras.Input(shape=(8, 1, 16))
        outputs = self.construct_net(input_var)
 
