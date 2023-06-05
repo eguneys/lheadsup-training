@@ -437,7 +437,7 @@ class TFProcess:
         value = outputs
         value_loss = self.value_loss_fn(y, value)
         value_accuracy = self.value_accuracy_fn(y, value)
-        tf.print(value)
+        #tf.print(value)
 
         metrics = [
                 value_loss,
