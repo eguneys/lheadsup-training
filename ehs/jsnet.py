@@ -10,18 +10,22 @@ def nested_getattr(obj, attr):
         obj = obj.get(a)
     return obj
 
+def conv_layer_js():
+    return {
+            "weights": {},
+            "bn_gammas": {},
+            "bn_betas": {},
+            "bn_means": {},
+            "bn_stddivs": {}
+            }
 
 class JSNet:
     def __init__(self):
         self.js = {
                 "weights": {
-                    "input": {
-                        "weights": {}
-                        },
+                    "input": conv_layer_js(),
                     "residual": [],
-                    "value": {
-                        "weights": {}
-                        },
+                    "value": conv_layer_js(),
                     "ip1_val_w": {},
                     "ip1_val_b": {},
                     "ip2_val_w": {},
@@ -141,8 +145,8 @@ class JSNet:
                 assert block >= 0
                 while block >= len(self.js.get("weights").get("residual")):
                         self.js.get("weights").get("residual").append({
-                            "conv1": { "weights": {} },
-                            "conv2": { "weights": {} },
+                            "conv1": conv_layer_js(),
+                            "conv2": conv_layer_js(),
                             "se": { 
                                 "w1": {},
                                 "b1": {},
@@ -153,10 +157,16 @@ class JSNet:
                 pb_weights = self.js.get("weights").get("residual")[block]
 
             #if pb_name == 'input.weights': print(weights.shape)
+            #print(pb_name, nested_getattr(pb_weights, pb_name))
             self.fill_layer_v2(nested_getattr(pb_weights, pb_name), weights)
 
             if pb_name.endswith('bn_betas'):
-                raise ValueError("TODO")
+                gamma_name = name.replace('beta', 'gamma')
+                if gamma_name in weight_names:
+                    continue
+                gamma = np.ones(weights.shape)
+                pb_gamma = pb_name.replace('bn_betas', 'bn_gammas')
+                self.fill_layer_v2(nested_getattr(pb_weights, pb_gamma), gamma)
 
 
 
