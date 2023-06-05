@@ -113,7 +113,7 @@ class TFProcess:
            self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, False, self.loss_scale)
 
        def value_loss(target, output):
-           scale = 10000.0
+           scale = 1000.0
            output = tf.cast(output, tf.float32)
            target = target * scale
            output = output * scale
@@ -133,7 +133,7 @@ class TFProcess:
        #self.value_loss_fn = mean_absolute_error
        #self.value_loss_fn = huber_loss
 
-       def accuracy(target, output, threshold=0.07):
+       def accuracy(target, output, threshold=0.09):
            output = tf.cast(output, tf.float32)
            target = tf.cast(target, tf.float32)
            absolute_difference = tf.abs(target - output)
@@ -203,6 +203,14 @@ class TFProcess:
             print("Restoring from {0}".format(self.manager.latest_checkpoint))
             self.checkpoint.restore(self.manager.latest_checkpoint)
 
+    def batch_norm(self, input, name, scale=False):
+        return tf.keras.layers.BatchNormalization(
+                epsilon=1e-5,
+                axis=3,
+                center=True,
+                scale=scale,
+                name=name)(input)
+
     def squeeze_excitation(self, inputs, channels, name):
         assert channels % self.SE_ratio == 0
 
@@ -225,7 +233,8 @@ class TFProcess:
             inputs,
             filter_size,
             output_channels,
-            name):
+            name,
+            bn_scale=False):
         conv = tf.keras.layers.Conv2D(output_channels,
                 filter_size,
                 use_bias=False,
@@ -234,7 +243,8 @@ class TFProcess:
                 kernel_regularizer=self.l2reg,
                 data_format='channels_last',
                 name=name + '/conv2d')(inputs)
-        return tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(conv)
+        return tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(
+                self.batch_norm(conv, name=name + '/bn', scale=bn_scale))
 
     def residual_block(self, inputs, channels, name):
         conv1 = tf.keras.layers.Conv2D(channels,
@@ -245,7 +255,8 @@ class TFProcess:
                 kernel_regularizer=self.l2reg,
                 data_format='channels_last',
                 name=name + '/1/conv2d')(inputs)
-        out1 = tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(conv1)
+        out1 = tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(
+                self.batch_norm(conv1, name + '/1/bn', scale=False))
         conv2 = tf.keras.layers.Conv2D(channels,
                 3,
                 use_bias=False,
@@ -255,7 +266,10 @@ class TFProcess:
                 data_format='channels_last',
                 name=name + '/2/conv2d')(out1)
 
-        out2 = self.squeeze_excitation(conv2, channels, name=name + '/se')
+        out2 = self.squeeze_excitation(self.batch_norm(conv2, 
+            name + '/2/bn',
+            scale=True),
+            channels, name=name + '/se')
 
         return tf.keras.layers.Activation(self.DEFAULT_ACTIVATION)(
                 tf.keras.layers.add([inputs, out2]))
@@ -264,7 +278,8 @@ class TFProcess:
         flow = self.conv_block(inputs,
                 filter_size=3,
                 output_channels=self.RESIDUAL_FILTERS,
-                name='input')
+                name='input',
+                bn_scale=True)
 
         for i in range(self.RESIDUAL_BLOCKS):
             flow = self.residual_block(flow,
