@@ -204,6 +204,7 @@ class TFProcess:
             self.checkpoint.restore(self.manager.latest_checkpoint)
 
     def batch_norm(self, input, name, scale=False):
+        #return input
         return tf.keras.layers.BatchNormalization(
                 epsilon=1e-5,
                 axis=3,
@@ -436,6 +437,7 @@ class TFProcess:
         value = outputs
         value_loss = self.value_loss_fn(y, value)
         value_accuracy = self.value_accuracy_fn(y, value)
+        tf.print(value)
 
         metrics = [
                 value_loss,
@@ -532,7 +534,6 @@ class TFProcess:
             total_loss = self.lossMix(value_loss, value_loss, reg_term)
             if self.loss_scale != 1:
                 total_loss = self.optimizer.get_scaled_loss(total_loss)
-            #tf.print(value)
             metrics = [
                     value_loss,
                     reg_term,

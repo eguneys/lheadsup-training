@@ -132,6 +132,12 @@ class JSNet:
             layers = name.split('/')
             weights_name = layers[-1]
 
+            if weights.ndim == 4:
+                #[filter_height, filter_width, in_channels, out_channels]
+                #[output, input, filter_size, filter_size]
+                #print(name, weights.shape)
+                weights = np.transpose(weights, axes=[3, 2, 0, 1])
+
             pb_name, block = self.tf_name_to_pb_name(name)
 
             if pb_name is None:
