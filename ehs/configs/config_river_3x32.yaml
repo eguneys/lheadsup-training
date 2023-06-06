@@ -8,7 +8,7 @@ dataset:
   input: '/tmp/ehs-data/data_all/'
 
 training:
-  batch_size: 128
+  batch_size: 8
   test_steps: 2000
   train_avg_report_steps: 150
   total_steps: 36000

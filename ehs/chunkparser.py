@@ -5,10 +5,11 @@ import sys
 import numpy as np
 import random
 import shufflebuffer as sb
+import multiprocessing as mp
 
 V6_STRUCT_STRING = '>14sf'
 
-def chunk_reader(chunk_filenames):
+def chunk_reader(chunk_filenames, chunk_filename_queue):
     chunks = []
     done = chunk_filenames
     while True:
@@ -21,7 +22,7 @@ def chunk_reader(chunk_filenames):
         while len(chunks):
             filename = chunks.pop()
             done.append(filename)
-            yield filename
+            chunk_filename_queue.put(filename)
     print("chunk_reader exiting.")
     return None
 
@@ -37,7 +38,13 @@ class ChunkParser:
         return self.inner.parse()
 
     def shutdown(self):
-        pass
+        for i in range(len(self.processes)):
+            self.processes[i].terminate()
+            self.processes[i].join()
+            self.inner.readers[i].close()
+            self.inner.writers[i].close()
+        self.chunk_process.terminate()
+        self.chunk_process.join()
 
 class ChunkParserInner:
 
@@ -56,6 +63,34 @@ class ChunkParserInner:
         self.batch_size = batch_size
         self.shuffle_size = shuffle_size
 
+        workers = max(1, mp.cpu_count() - 2)
+
+        if workers > 0:
+            print("Using {} worker processes.".format(workers))
+
+            self.readers = []
+            self.writers = []
+            parent.processes = []
+            self.chunk_filename_queue = mp.Queue(maxsize=4096)
+            for _ in range(workers):
+                read, write = mp.Pipe(duplex=False)
+                p = mp.Process(target=self.task,
+                        args = (self.chunk_filename_queue, write))
+
+                p.daemon = True
+                parent.processes.append(p)
+                p.start()
+                self.readers.append(read)
+                self.writers.append(write)
+
+            parent.chunk_process = mp.Process(target=chunk_reader,
+                    args=(chunks,
+                        self.chunk_filename_queue))
+            parent.chunk_process.daemon = True
+            parent.chunk_process.start()
+        else:
+            self.chunks = chunks
+
         self.init_structs()
 
     def init_structs(self):
@@ -63,11 +98,9 @@ class ChunkParserInner:
 
 
     def parse(self):
-        gen = chunk_reader(self.chunks)
-        gen = self.v6_gen(gen)
+        gen = self.v6_gen()
         gen = self.tuple_gen(gen)
         gen = self.batch_gen(gen)
-
         for b in gen:
             yield b
 
@@ -83,24 +116,33 @@ class ChunkParserInner:
         for r in gen:
             yield self.convert_v6_to_tuple(r)
 
-    def task(self, filename):
-        for item in self.single_file_gen(filename):
-            yield item
+    def task(self, chunk_filename_queue, writer):
+        self.init_structs()
 
-    def v6_gen(self, chunk_filenames):
+        while True:
+            filename = chunk_filename_queue.get()
+            for item in self.single_file_gen(filename):
+                writer.send_bytes(item)
+                
+
+    def v6_gen(self):
         sbuff = sb.ShuffleBuffer(self.v6_struct.size, self.shuffle_size)
-        for filename in chunk_filenames:
-            for item in self.task(filename):
-                s = sbuff.insert_or_replace(item)
-                if s is None:
-                    continue
-                yield s
+        while len(self.readers):
+            for r in self.readers:
+                try:
+                    s = r.recv_bytes()
+                    s = sbuff.insert_or_replace(s)
+                    if s is None:
+                        continue
+                    yield s
+                except EOFError:
+                    print("Reader EOF")
+                    self.readers.remove(r)
         while True:
             s = sbuff.extract()
             if s is None:
                 return
             yield s
-
 
     def convert_v6_to_tuple(self, content):
         (cards, value) = self.v6_struct.unpack(content)
