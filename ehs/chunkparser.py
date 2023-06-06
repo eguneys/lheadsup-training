@@ -6,6 +6,7 @@ import numpy as np
 import random
 import shufflebuffer as sb
 import multiprocessing as mp
+import os
 
 V6_STRUCT_STRING = '>14sf'
 
