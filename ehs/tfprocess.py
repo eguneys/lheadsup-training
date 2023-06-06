@@ -290,6 +290,22 @@ class TFProcess:
 
 
     def construct_net(self, inputs, name=''):
+
+        flow = inputs
+
+
+        h_flat = tf.keras.layers.Flatten()(inputs)
+
+        h_fc3 = tf.keras.layers.Dense(1,
+            kernel_initializer='glorot_normal',
+            kernel_regularizer=self.l2reg,
+            bias_regularizer=self.l2reg,
+            activation='tanh',
+            name='value/dense2')(h_flat)
+
+        return [h_fc3]
+
+
         flow = self.create_residual_body(inputs)
 
         conv_value = self.conv_block(flow,
@@ -310,6 +326,8 @@ class TFProcess:
             bias_regularizer=self.l2reg,
             activation='tanh',
             name='value/dense2')(h_fc2)
+
+        #print(inputs.shape, h_fc2.shape, h_fc3.shape)
 
         outputs = [h_fc3]
 

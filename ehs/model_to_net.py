@@ -57,7 +57,7 @@ input = tf.constant([[
     [[1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1]]]])
 
 res = tfp.model(input)
-print(input)
+#print(input)
 tf.print(res)
 
 root_dir = os.path.join(cfg['training']['path'], cfg['name'])
