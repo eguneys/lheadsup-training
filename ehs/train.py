@@ -50,15 +50,21 @@ def main(cmd):
     test_chunks = chunks[num_train:]
 
 
+    shuffle_size = cfg['training']['shuffle_size']
     total_batch_size = cfg['training']['batch_size']
     batch_splits = cfg['training'].get('num_batch_splits', 1)
     if total_batch_size % batch_splits != 0:
         raise ValueError('num_batch_splits must divide batch_size evenly')
     split_batch_size = total_batch_size // batch_splits
 
-    train_parser = ChunkParser(train_chunks, batch_size=split_batch_size)
+    train_parser = ChunkParser(train_chunks, 
+            shuffle_size=shuffle_size, 
+            batch_size=split_batch_size)
+    test_shuffle_size = int(shuffle_size * (1.0 - train_ratio))
 
-    test_parser = ChunkParser(test_chunks, batch_size=split_batch_size)
+    test_parser = ChunkParser(test_chunks, 
+            shuffle_size=test_shuffle_size,
+            batch_size=split_batch_size)
 
     import tensorflow as tf
 

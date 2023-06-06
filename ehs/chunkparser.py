@@ -4,6 +4,7 @@ import gzip
 import sys
 import numpy as np
 import random
+import shufflebuffer as sb
 
 V6_STRUCT_STRING = '>14sf'
 
@@ -27,9 +28,10 @@ def chunk_reader(chunk_filenames):
 class ChunkParser:
     def __init__(self, 
             chunks,
+            shuffle_size=1,
             sample=1,
             batch_size=256):
-        self.inner = ChunkParserInner(self, chunks, sample, batch_size)
+        self.inner = ChunkParserInner(self, chunks, shuffle_size, sample, batch_size)
 
     def parse(self):
         return self.inner.parse()
@@ -39,7 +41,8 @@ class ChunkParser:
 
 class ChunkParserInner:
 
-    def __init__(self, parent, chunks, sample, batch_size):
+    def __init__(self, parent, chunks, shuffle_size, sample, batch_size):
+
 
         self.flat_planes = []
         for i in range(2):
@@ -51,6 +54,7 @@ class ChunkParserInner:
 
         self.chunks = chunks
         self.batch_size = batch_size
+        self.shuffle_size = shuffle_size
 
         self.init_structs()
 
@@ -84,9 +88,18 @@ class ChunkParserInner:
             yield item
 
     def v6_gen(self, chunk_filenames):
+        sbuff = sb.ShuffleBuffer(self.v6_struct.size, self.shuffle_size)
         for filename in chunk_filenames:
             for item in self.task(filename):
-                yield item
+                s = sbuff.insert_or_replace(item)
+                if s is None:
+                    continue
+                yield s
+        while True:
+            s = sbuff.extract()
+            if s is None:
+                return
+            yield s
 
 
     def convert_v6_to_tuple(self, content):
