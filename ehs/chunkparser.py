@@ -59,7 +59,6 @@ class ChunkParserInner:
 
         self.sample = sample
 
-
         self.chunks = chunks
         self.batch_size = batch_size
         self.shuffle_size = shuffle_size

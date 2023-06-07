@@ -60,8 +60,9 @@ def main(cmd):
     train_parser = ChunkParser(train_chunks, 
             shuffle_size=shuffle_size, 
             batch_size=split_batch_size)
-    test_shuffle_size = int(shuffle_size * (1.0 - train_ratio))
+    test_shuffle_size = max(1, int(shuffle_size * (1.0 - train_ratio)))
 
+    #split_batch_size *= 128
     test_parser = ChunkParser(test_chunks, 
             shuffle_size=test_shuffle_size,
             batch_size=split_batch_size)
