@@ -89,7 +89,7 @@ class TFProcess:
 
     def init_net(self):
        #self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
-       self.l2reg = tf.keras.regularizers.l2()
+       self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
        #self.l2reg = None
        input_var = tf.keras.Input(shape=(8, 1, 16))
        outputs = self.construct_net(input_var)
@@ -113,7 +113,7 @@ class TFProcess:
            self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, False, self.loss_scale)
 
        def value_loss(target, output):
-           scale = 1.0
+           scale = 30.0
            output = tf.cast(output, tf.float32)
            target = target * scale
            output = output * scale
@@ -130,7 +130,7 @@ class TFProcess:
            return tf.reduce_mean(huber(target, output))
 
        self.value_loss_fn = value_loss
-       self.value_loss_fn = mean_absolute_error
+       #self.value_loss_fn = mean_absolute_error
        #self.value_loss_fn = huber_loss
 
        def accuracy(target, output, threshold=0.09):

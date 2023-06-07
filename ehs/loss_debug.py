@@ -3,12 +3,11 @@
 import tensorflow as tf
 
 def value_loss(target, output):
-    scale = 1.0
+    scale = 30.0
     output = tf.cast(output, tf.float32)
     target = target * scale
     output = output * scale
 
-    #tf.print(target, output, tf.reduce_mean(tf.square(target - output)))
     return tf.reduce_mean(tf.square(target - output)) / scale
 
 def mean_absolute_error(target, output):
@@ -39,14 +38,17 @@ bs = [
         ]
 
 bs = [
-        [0.1, 0.1, 0.1],
-        [0.1, 0.2, 0.1],
-        [0.1, 0.2, 0.2],
-        [0.2, 0.2, 0.2]
-
+        [0.5],
+        [0.51],
+        [0.52],
+        [0.55],
+        [0.59],
+        [0.6],
+        [0.7],
+        [0.8]
         ]
 
-a = tf.constant([0.1, 0.1, 0.1])
+a = tf.constant([0.5])
 
 [compare(a, tf.constant(b)) for b in bs]
 

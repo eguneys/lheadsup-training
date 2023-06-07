@@ -3,9 +3,9 @@
 name: 'ehs1_river_3x32_debug'
 
 dataset:
-  num_chunks: 2
+  num_chunks: 1680
   train_ratio: 0.9
-  input: '../lheadsup-play/data/data_high_sub/'
+  input: '../lheadsup-play/data/data_all/'
 
 training:
   batch_size: 1024
@@ -15,9 +15,9 @@ training:
   warmup_steps: 2500
   shuffle_size: 20000
   lr_values:
-    - 0.00002
-    - 0.000002
-    - 0.0000003
+    - 0.002
+    - 0.0002
+    - 0.00003
   lr_boundaries:
     - 28000
     - 34000
