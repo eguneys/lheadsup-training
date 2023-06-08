@@ -2,6 +2,11 @@
 
 import tensorflow as tf
 
+def threshold_loss(target, output):
+    difference = tf.abs(target - output)
+    loss = tf.where(difference < 0.1, 2 * tf.square(difference), 6.0 * difference)
+    return tf.reduce_mean(loss)
+
 def value_loss(target, output):
     scale = 30.0
     output = tf.cast(output, tf.float32)
@@ -20,13 +25,14 @@ def huber_loss(target, output):
 
 
 def compare(a, b):
+    tl = threshold_loss(a, b)
     vl = value_loss(a, b)
     mae = mean_absolute_error(a, b)
     hl = huber_loss(a, b)
 
     tf.print(a, b)
-    print("VL MAE HL")
-    tf.print(vl, mae, hl)
+    print("TL VL MAE HL")
+    tf.print(tl, vl, mae, hl)
 
 
 

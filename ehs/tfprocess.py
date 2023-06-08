@@ -129,9 +129,10 @@ class TFProcess:
            huber = tf.keras.losses.Huber(0.1)
            return tf.reduce_mean(huber(target, output))
 
+
        def threshold_loss(target, output):
            difference = tf.abs(target - output)
-           loss = tf.where(difference < 0.1, 0.5 * tf.square(difference), 10.0 * tf.abs(difference - 0.1))
+           loss = tf.where(difference < 0.1, 2 * tf.square(difference), 6.0 * difference)
            return tf.reduce_mean(loss)
 
        #self.value_loss_fn = value_loss
