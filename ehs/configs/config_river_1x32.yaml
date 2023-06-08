@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-name: 'ehs1_river_3x32'
+name: 'ehs1_river_1x32'
 
 dataset:
   num_chunks: 1680
@@ -15,9 +15,9 @@ training:
   warmup_steps: 250
   shuffle_size: 524288
   lr_values:
+    - 0.02
     - 0.002
-    - 0.0002
-    - 0.00003
+    - 0.0003
   lr_boundaries:
     - 28000
     - 32000
@@ -26,5 +26,5 @@ training:
 
 model:
   filters: 32
-  residual_blocks: 3
+  residual_blocks: 1
   se_ratio: 2

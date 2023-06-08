@@ -89,7 +89,7 @@ class TFProcess:
 
     def init_net(self):
        #self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
-       self.l2reg = tf.keras.regularizers.l2(l=0.5 * (0.0001))
+       self.l2reg = tf.keras.regularizers.l2()
        #self.l2reg = None
        input_var = tf.keras.Input(shape=(8, 1, 16))
        outputs = self.construct_net(input_var)
@@ -132,7 +132,7 @@ class TFProcess:
 
        def threshold_loss(target, output):
            difference = tf.abs(target - output)
-           loss = tf.where(difference < 0.1, 2 * tf.square(difference), 6.0 * difference)
+           loss = tf.where(difference < 0.1, tf.square(difference), 3.0 * difference)
            return tf.reduce_mean(loss)
 
        #self.value_loss_fn = value_loss
