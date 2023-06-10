@@ -16,7 +16,6 @@ import os
 V6_STRUCT_STRING = '>14sf'
 v6_struct = struct.Struct(V6_STRUCT_STRING)
 
-
 flat_planes = []
 for i in range(2):
    flat_planes.append(
@@ -69,7 +68,7 @@ def encode_card(card):
 def encode_board(hand, board):
     def flatten(l):
         return [item for sublist in l for item in sublist]
-    padding = [0 for _ in range(0, 5 - len(board))]
+    padding = [0 for _ in range(0, (5 - len(board)) * 2)]
     return flatten([encode_card(card) for card in hand + board]) + padding
 
 def hand_to_tensor(hand, board):
@@ -77,8 +76,11 @@ def hand_to_tensor(hand, board):
     encoded = encode_board(card_sort(split_cards(hand)), card_sort(split_cards(board)))
     packed = struct.pack(V6_STRUCT_STRING, struct.pack("b"*len(encoded), *encoded), 0.0)
 
-    print(hand, packed)
+    print(encoded,packed)
+
     cards, value = parse_function(*convert_v6_to_tuple(packed))
+
+    print(cards, value)
 
     return cards
 
@@ -106,7 +108,7 @@ def sample_record(chunkdata):
 
     for i in range(0, len(chunkdata), record_size):
         record = chunkdata[i:i+record_size]
-        print(record)
+        #print(record)
         yield record
 
 def tensor_gen(gen):
@@ -144,18 +146,67 @@ def main():
 
     def l_test():
         l = [
-                ["JdKc", "7s9h5h3d8c", -0.04204002395272255],
-                ["7c6c", "3sKd8d5d2d", -0.008527020923793316],
-                ["5hKd", "3sQhJh9h4d", -0.14606991410255432],
-                ["7s2c", "9sAh8h3dJc", -0.03928561136126518],
-                ["7s6c", "QsKs5s9c3c", 0.11524167656898499],
-                ["2s3h", "As7h5h9d8c", -0.005144748371094465],
-                ["As2h", "Jd6dTc9c4c", 0.06501973420381546],
-                ["Jc5c", "As6s3d7c2c", 0.1521560549736023],
-                ["Ks2c", "3sJh9h4hAc", -0.16145703196525574],
-                ["Ad3d", "9h2hQd7d5c", -0.008095151744782925],
-
+                ["Tc3d", "4s3s6c", 0.62],
+                ["Ah5d", "TcJc2c", 0.48],
+                ["QdJc", "3c6d8c", 0.48],
+                ["9h5d", "6d7sKd", 0.28],
+                ["6cTs", "Th2cQc", 0.76],
+                ["2s2d", "4c6c3s", 0.56],
+                ["Qs3d", "2h8c8d", 0.36],
+                ["Qs9s", "5d3cAd", 0.36],
+                ["QcQh", "6d2cQd", 0.96],
+                ["8h3d", "4c4hJd", 0.2],
+                ["3cQs", "7c8dTh", 0.46],
+                ["9sAh", "Ts8d3h", 0.56],
+                ["ThJh", "9c4s8s", 0.66],
+                ["5c8d", "5s4dAs", 0.62],
+                ["Ac5d", "3s6h6d", 0.56],
+                ["Ts2s", "8sQsJs", 0.92],
+                ["2c8s", "TsAs3h", 0.32],
+                ["Ks3c", "Qh7sKh", 0.78],
+                ["2c2d", "8s4c6s", 0.46],
+                ["8cKc", "KsJd5c", 0.88],
+                ["9s6c", "Kh5s9d", 0.74],
+                ["9h4h", "4s7sKd", 0.5],
+                ["2d3s", "As8sTc", 0.3],
+                ["Kc3h", "KdTdQs", 0.78],
+                ["Ks9s", "Kd6sQd", 0.8],
+                ["AhAd", "ThAc8h", 0.96],
+                ["AdJh", "Ac4dKh", 0.86],
+                ["AsKc", "6s6d2d", 0.64],
+                ["Kd4c", "AhKhJd", 0.74],
+                ["7sJh", "9d7c5h", 0.66],
+                ["AsKc", "4c8cQd", 0.64],
+                ["3c3s", "8d4sKs", 0.42],
+                ["6d5h", "5d2d2c", 0.64],
+                ["8dAs", "2h6dJd", 0.48],
+                ["Ah9s", "TdJc5s", 0.46],
+                ["Ts3s", "3cKd4s", 0.64],
+                ["2hKh", "AcJhAh", 0.62],
+                ["2dKc", "QsKd9s", 0.8],
+                ["JdQh", "KsQsKd", 0.84],
+                ["7s3h", "7c2d5d", 0.68],
+                ["KdTh", "9d6dTs", 0.7],
+                ["Ac8d", "KsQh6h", 0.52],
+                ["QcAh", "Tc4d3d", 0.58],
+                ["Qs8c", "TdJcTc", 0.62],
+                ["6s2s", "Qc7cJd", 0.18],
+                ["7d7c", "AsThJs", 0.46],
+                ["4h2c", "Qc3s9h", 0.16],
+                ["Tc3c", "6cKs5d", 0.42],
+                ["2s3d", "As8cTs", 0.24],
+                ["Jc3s", "4hJsKc", 0.78],
+        ["Jh3c", "Ts2h6s", 0.16],
+        ["2s9h", "6s8hQh", 0.28],
+        ["TsTc", "Ks4d8h", 0.72],
+        ["6c8c", "TsJcTc", 0.66],
+        ["Td5s", "5c8hTs", 0.94],
+        ["2hKh", "Th3cAh", 0.72],
                 ]
+
+        l = [
+                ["Tc3d", "4s3s6c", 0.62],
+        ]
 
         res = [abs(predict(x[0], x[1]) - x[2]) for x in l]
         res.sort()

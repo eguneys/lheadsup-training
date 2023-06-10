@@ -13,11 +13,11 @@ training:
   train_avg_report_steps: 150
   total_steps: 36000
   warmup_steps: 250
-  shuffle_size: 524288
+  shuffle_size: 124288
   lr_values:
-    - 0.02
-    - 0.002
-    - 0.0003
+    - 0.00002
+    - 0.000002
+    - 0.0000003
   lr_boundaries:
     - 28000
     - 32000
