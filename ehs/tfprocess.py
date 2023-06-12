@@ -315,7 +315,7 @@ class TFProcess:
             kernel_initializer='glorot_normal',
             kernel_regularizer=self.l2reg,
             bias_regularizer=self.l2reg,
-            activation='tanh',
+            activation='relu',
             name='value/dense2')(h_fc2)
 
         outputs = [h_fc3]
