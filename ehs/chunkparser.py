@@ -8,7 +8,7 @@ import shufflebuffer as sb
 import multiprocessing as mp
 import os
 
-V6_STRUCT_STRING = '>14sf'
+V6_STRUCT_STRING = '>14s3f'
 
 def chunk_reader(chunk_filenames, chunk_filename_queue):
     chunks = []
@@ -110,7 +110,8 @@ class ChunkParserInner:
             if not len(s):
                 return
 
-            yield (b''.join([x[0] for x in s]), b''.join([x[1] for x in s]))
+            yield (b''.join([x[0] for x in s]), b''.join([x[1] for x in s]),
+                    b''.join([x[2] for x in s]), b''.join([x[3] for x in s]))
 
     def tuple_gen(self, gen):
         for r in gen:
@@ -145,9 +146,11 @@ class ChunkParserInner:
             yield s
 
     def convert_v6_to_tuple(self, content):
-        (cards, value) = self.v6_struct.unpack(content)
+        (cards, hs, ppot, npot) = self.v6_struct.unpack(content)
 
-        value = struct.pack('f', value)
+        hs = struct.pack('f', hs)
+        ppot = struct.pack('f', ppot)
+        npot = struct.pack('f', npot)
 
         planes = np.unpackbits(np.frombuffer(cards, dtype=np.uint8)).astype(np.float32)
 
@@ -158,7 +161,7 @@ class ChunkParserInner:
 
         assert len(planes) == ((7 * 2 + 1 + 1) * 8 * 4)
 
-        return (planes, value)
+        return (planes, hs, ppot, npot)
 
     def single_file_gen(self, filename):
         try:

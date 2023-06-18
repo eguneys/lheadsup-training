@@ -1,19 +1,19 @@
 %YAML 1.2
 ---
-name: 'ehs1_mix_3x32'
+name: 'ehs2_mix_3x32'
 
 dataset:
-  num_chunks: 3024
+  num_chunks: 64
   train_ratio: 0.90
-  input: '/tmp/ehs-data/data_mix/data/'
+  input: '/tmp/ehs-data/data_v2/all/'
 
 training:
-  batch_size: 1024
+  batch_size: 64
   test_steps: 2000
   train_avg_report_steps: 150
   total_steps: 36000
   warmup_steps: 250
-  shuffle_size: 524288
+  shuffle_size: 24288
   lr_values:
     - 0.02
     - 0.002

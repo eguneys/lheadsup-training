@@ -75,11 +75,11 @@ def main(cmd):
 
     train_dataset = tf.data.Dataset.from_generator(
             train_parser.parse,
-            output_types=(tf.string, tf.string))
+            output_types=(tf.string, tf.string, tf.string, tf.string))
     train_dataset = train_dataset.map(parse_function)
     test_dataset = tf.data.Dataset.from_generator(
             test_parser.parse,
-            output_types=(tf.string, tf.string))
+            output_types=(tf.string, tf.string, tf.string, tf.string))
     test_dataset = test_dataset.map(parse_function)
 
     train_dataset = train_dataset.prefetch(4)

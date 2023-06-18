@@ -25,11 +25,23 @@ class JSNet:
                 "weights": {
                     "input": conv_layer_js(),
                     "residual": [],
-                    "value": conv_layer_js(),
-                    "ip1_val_w": {},
-                    "ip1_val_b": {},
-                    "ip2_val_w": {},
-                    "ip2_val_b": {},
+                    "hs": conv_layer_js(),
+                    "ppot": conv_layer_js(),
+                    "npot": conv_layer_js(),
+                    "ip1_hs_w": {},
+                    "ip1_hs_b": {},
+                    "ip2_hs_w": {},
+                    "ip2_hs_b": {},
+
+                    "ip1_ppot_w": {},
+                    "ip1_ppot_b": {},
+                    "ip2_ppot_w": {},
+                    "ip2_ppot_b": {},
+
+                    "ip1_npot_w": {},
+                    "ip1_npot_b": {},
+                    "ip2_npot_w": {},
+                    "ip2_npot_b": {},
                     }
                 }
         self.weights = []
@@ -88,7 +100,7 @@ class JSNet:
 
             return d[w] + str(n)
 
-        def value_to_bp(l, w):
+        def value_to_bp(val, l, w):
             if l == 'dense1':
                 n = 1
             elif l == 'dense2':
@@ -97,9 +109,9 @@ class JSNet:
                raise ValueError('Unable to decode value weight {}/{}'.format(
                    l, w))
             w = w.split(':')[0]
-            d = {'kernel': 'ip{}_val_w', 'bias': 'ip{}_val_b'}
+            d = {'kernel': 'ip{}_{}_w', 'bias': 'ip{}_{}_b'}
 
-            return d[w].format(n)
+            return d[w].format(n, val)
 
         layers = name.split('/')
         base_layer = layers[0]
@@ -109,11 +121,21 @@ class JSNet:
 
         if base_layer == 'input':
             pb_name = 'input.' + convblock_to_bp(weights_name)
-        elif base_layer == 'value':
+        elif base_layer == 'hs':
             if 'dense' in layers[1]:
-                pb_name = value_to_bp(layers[1], weights_name)
+                pb_name = value_to_bp('hs', layers[1], weights_name)
             else:
-                pb_name = 'value.' + convblock_to_bp(weights_name)
+                pb_name = 'hs.' + convblock_to_bp(weights_name)
+        elif base_layer == 'ppot':
+            if 'dense' in layers[1]:
+                pb_name = value_to_bp('ppot', layers[1], weights_name)
+            else:
+                pb_name = 'ppot.' + convblock_to_bp(weights_name)
+        elif base_layer == 'npot':
+            if 'dense' in layers[1]:
+                pb_name = value_to_bp('npot', layers[1], weights_name)
+            else:
+                pb_name = 'npot.' + convblock_to_bp(weights_name)
         elif base_layer.startswith('residual'):
             block = int(base_layer.split('_')[1]) - 1
             if layers[1] == '1':
@@ -163,7 +185,7 @@ class JSNet:
                 pb_weights = self.js.get("weights").get("residual")[block]
 
             #if pb_name == 'input.weights': print(weights.shape)
-            #print(pb_name, nested_getattr(pb_weights, pb_name))
+            # print(pb_name, nested_getattr(pb_weights, pb_name))
             self.fill_layer_v2(nested_getattr(pb_weights, pb_name), weights)
 
             if pb_name.endswith('bn_betas'):
@@ -173,7 +195,4 @@ class JSNet:
                 gamma = np.ones(weights.shape)
                 pb_gamma = pb_name.replace('bn_betas', 'bn_gammas')
                 self.fill_layer_v2(nested_getattr(pb_weights, pb_gamma), gamma)
-
-
-
 

@@ -112,15 +112,6 @@ class TFProcess:
        if self.loss_scale != 1:
            self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, False, self.loss_scale)
 
-       def value_loss(target, output):
-           scale = 30.0
-           output = tf.cast(output, tf.float32)
-           target = target * scale
-           output = output * scale
-
-           #tf.print(target, output, tf.reduce_mean(tf.square(target - output)))
-           return tf.reduce_mean(tf.square(target - output)) / scale
-
        def mean_absolute_error(target, output):
            return tf.reduce_mean(tf.abs(target - output))
 
@@ -135,9 +126,6 @@ class TFProcess:
            loss = tf.where(difference < 0.1, tf.square(difference), 3.0 * difference)
            return tf.reduce_mean(loss)
 
-       #self.value_loss_fn = value_loss
-       #self.value_loss_fn = mean_absolute_error
-       #self.value_loss_fn = huber_loss
        self.value_loss_fn = threshold_loss
 
        def accuracy(target, output, threshold=0.09):
@@ -150,36 +138,29 @@ class TFProcess:
 
        self.value_accuracy_fn = accuracy
 
-
-       def value_entropy(target, output):
-           target, output = correct_value(target, output)
-           softmaxed = tf.nn.softmax(output)
-
-           return tf.math.negative(
-                   tf.reduce_mean(
-                       tf.reduce_sum(tf.math.xlogy(softmaxed, softmaxed),
-                           axis=1)))
-
-       self.value_entropy_fn = value_entropy
-
-
        value_loss_w = self.cfg['training']['value_loss_weight']
        reg_term_w = self.cfg['training'].get('reg_term_weight', 1.0)
 
-       def _lossMix(value, _value, reg_term):
-           return value_loss_w * value + reg_term_w * reg_term
+       def _lossMix(hs, ppot, npot, reg_term):
+           return value_loss_w * (hs * 0.6 + ppot * 0.2 + npot * 0.2) + reg_term_w * reg_term
 
        self.lossMix = _lossMix
 
        self.train_metrics = [
-               Metric('V', 'Value Loss'),
+               Metric('HS', 'HandS Loss'),
+               Metric('PPot', 'PPot Loss'),
+               Metric('NPot', 'NPot Loss'),
                Metric('Reg', 'Reg term'),
                Metric('Total', 'Total Loss'),
                ]
 
        self.test_metrics = [
-               Metric('V', 'Value Loss'),
-               Metric('V Acc', 'Value Accuracy', suffix='%')]
+               Metric('HS', 'HandS Loss'),
+               Metric('HS Acc', 'HandS Accuracy', suffix='%'),
+               Metric('PPot', 'PPot Loss'),
+               Metric('PPot Acc', 'PPot Accuracy', suffix='%'),
+               Metric('NPot', 'NPot Loss'),
+               Metric('NPot Acc', 'NPot Accuracy', suffix='%')]
 
        self.cfg['training']['lr_boundaries'].sort()
        self.warmup_steps = self.cfg['training'].get('warmup_steps', 0)
@@ -299,16 +280,16 @@ class TFProcess:
     def construct_net(self, inputs, name=''):
         flow = self.create_residual_body(inputs)
 
-        conv_value = self.conv_block(flow,
+        conv_hs = self.conv_block(flow,
             filter_size=1,
             output_channels=32,
-            name='value')
-        h_conv_value_flat = tf.keras.layers.Flatten()(conv_value)
+            name='hs')
+        h_conv_hs_flat = tf.keras.layers.Flatten()(conv_hs)
         h_fc2 = tf.keras.layers.Dense(128,
             kernel_initializer='glorot_normal',
             kernel_regularizer=self.l2reg,
             activation=self.DEFAULT_ACTIVATION,
-            name='value/dense1')(h_conv_value_flat)
+            name='hs/dense1')(h_conv_hs_flat)
 
 
         h_fc3 = tf.keras.layers.Dense(1,
@@ -316,9 +297,51 @@ class TFProcess:
             kernel_regularizer=self.l2reg,
             bias_regularizer=self.l2reg,
             activation='relu',
-            name='value/dense2')(h_fc2)
+            name='hs/dense2')(h_fc2)
 
-        outputs = [h_fc3]
+
+        conv_ppot = self.conv_block(flow,
+            filter_size=1,
+            output_channels=32,
+            name='ppot')
+        h_conv_ppot_flat = tf.keras.layers.Flatten()(conv_ppot)
+        h_fc4 = tf.keras.layers.Dense(128,
+            kernel_initializer='glorot_normal',
+            kernel_regularizer=self.l2reg,
+            activation=self.DEFAULT_ACTIVATION,
+            name='ppot/dense1')(h_conv_ppot_flat)
+
+
+        h_fc5 = tf.keras.layers.Dense(1,
+            kernel_initializer='glorot_normal',
+            kernel_regularizer=self.l2reg,
+            bias_regularizer=self.l2reg,
+            activation='relu',
+            name='ppot/dense2')(h_fc4)
+
+        conv_npot = self.conv_block(flow,
+            filter_size=1,
+            output_channels=32,
+            name='npot')
+        h_conv_npot_flat = tf.keras.layers.Flatten()(conv_npot)
+        h_fc6 = tf.keras.layers.Dense(128,
+            kernel_initializer='glorot_normal',
+            kernel_regularizer=self.l2reg,
+            activation=self.DEFAULT_ACTIVATION,
+            name='npot/dense1')(h_conv_npot_flat)
+
+
+        h_fc7 = tf.keras.layers.Dense(1,
+            kernel_initializer='glorot_normal',
+            kernel_regularizer=self.l2reg,
+            bias_regularizer=self.l2reg,
+            activation='relu',
+            name='npot/dense2')(h_fc6)
+
+
+
+
+        outputs = [h_fc3, h_fc5, h_fc7]
 
         return outputs
 
@@ -382,9 +405,9 @@ class TFProcess:
         for metric in self.test_metrics:
             metric.reset()
         for _ in range(0, test_batches):
-            x, y = next(self.test_iter)
+            x, y, z, q = next(self.test_iter)
             metrics = self.calculate_test_summaries_inner_loop(
-                    x, y)
+                    x, y, z, q)
 
             for acc, val in zip(self.test_metrics, metrics):
                 acc.accumulate(val)
@@ -439,19 +462,28 @@ class TFProcess:
         self.net.save_proto(filename)
 
     @tf.function()
-    def calculate_test_summaries_inner_loop(self, x, y):
+    def calculate_test_summaries_inner_loop(self, x, y, z, q):
         outputs = self.model(x, training=False)
-        value = outputs
-        value_loss = self.value_loss_fn(y, value)
-        value_accuracy = self.value_accuracy_fn(y, value)
-        
-        #tf.print(x, summarize=16)
-        #tf.print("Y V", y, value, summarize=10)
-        #tf.print("L A", value_loss, value_accuracy)
+        hs = outputs[0]
+        ppot = outputs[1]
+        npot = outputs[2]
 
+        hs_loss = self.value_loss_fn(y, hs)
+        hs_accuracy = self.value_accuracy_fn(y, hs)
+
+        ppot_loss = self.value_loss_fn(y, ppot)
+        ppot_accuracy = self.value_accuracy_fn(y, ppot)
+
+        npot_loss = self.value_loss_fn(y, npot)
+        npot_accuracy = self.value_accuracy_fn(y, npot)
+        
         metrics = [
-                value_loss,
-                value_accuracy * 100]
+                hs_loss,
+                hs_accuracy * 100,
+                ppot_loss,
+                ppot_accuracy * 100,
+                npot_loss,
+                npot_accuracy * 100]
 
         return metrics
 
@@ -476,8 +508,8 @@ class TFProcess:
 
         grads = None
         for _ in range(batch_splits):
-            x, y = next(self.train_iter)
-            metrics, new_grads = self.process_inner_loop(x, y)
+            x, y, z, q = next(self.train_iter)
+            metrics, new_grads = self.process_inner_loop(x, y, z, q)
             if not grads:
                 grads = new_grads
             else:
@@ -535,17 +567,23 @@ class TFProcess:
         return [w.read_value() for w in self.model.weights]
 
     @tf.function()
-    def process_inner_loop(self, x, y):
+    def process_inner_loop(self, x, y, z, q):
         with tf.GradientTape() as tape:
             outputs = self.model(x, training=True)
-            value = outputs
-            value_loss = self.value_loss_fn(y, value)
+            hs = outputs[0]
+            ppot = outputs[1]
+            npot = outputs[2]
+            hs_loss = self.value_loss_fn(y, hs)
+            ppot_loss = self.value_loss_fn(y, ppot)
+            npot_loss = self.value_loss_fn(y, npot)
             reg_term = sum(self.model.losses)
-            total_loss = self.lossMix(value_loss, value_loss, reg_term)
+            total_loss = self.lossMix(hs_loss, ppot_loss, npot_loss, reg_term)
             if self.loss_scale != 1:
                 total_loss = self.optimizer.get_scaled_loss(total_loss)
             metrics = [
-                    value_loss,
+                    hs_loss,
+                    ppot_loss,
+                    npot_loss,
                     reg_term,
                     total_loss,
                     ]

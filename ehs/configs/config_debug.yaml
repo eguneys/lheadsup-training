@@ -1,26 +1,28 @@
 %YAML 1.2
 ---
-name: 'ehs1_flop_3x32'
+name: 'ehs2_debug_3x32'
 
 dataset:
-  num_chunks: 1120
+  num_chunks: 64
   train_ratio: 0.90
-  input: '/tmp/ehs-data/data_1120_flop/'
+  input: '/tmp/ehs-data/data_v2/all/'
 
 training:
-  batch_size: 512
-  test_steps: 2000
+  batch_size: 64
+  test_steps: 200
   train_avg_report_steps: 150
-  total_steps: 36000
+  total_steps: 360
   warmup_steps: 250
-  shuffle_size: 124288
+  shuffle_size: 24288
   lr_values:
-    - 0.00002
-    - 0.000002
-    - 0.0000003
+    - 0.02
+    - 0.002
+    - 0.0003
+    - 0.00003
   lr_boundaries:
+    - 18000
     - 28000
-    - 32000
+    - 34000
   value_loss_weight: 1.0
   path: '/tmp/networks/'
 
